@@ -46,15 +46,15 @@ function getresponse () {
   xmlDoc = xmlhttp.responseXML;
 
   var bookInfo = "<h6>Book retrieved from file: " + XMLBook + "</h6>";
-  document.all.headArea.innerHTML = "<h1><font color=blue>XML Bible Demo Output</font></h1>"
+  document.all.headArea.innerHTML = "<h1><font color=green>XML Bible Demo Output</font></h1>"
 									+ bookInfo;
  // document.all.responseArea.innerHTML += "<b><i>im here </i></b>";
    // document.write("Welcome to CodeTextPro");
-   var nextBook = 0;
-   var nextChap = 0;
-   var nextVerse = 0;
+ //  var nextBook = 0;
+  // var nextChap = 0;
+  // var nextVerse = 0;
 
-   document.all.responseArea.innerHTML += "<b><i>im her " +verseNumber+ "</i></b>";
+   //document.all.responseArea.innerHTML += "<b><i>im her " +verseNumber+ "</i></b>";
    var i;
    document.all.responseArea.innerHTML = " ";
    for(i = 0; i <verseNumber;i++){
@@ -91,7 +91,7 @@ function getVerse(book,chapter,verse) {
 	throw "no chapter";
   verseOutput += " ";
   verseOutput += c.getAttribute("number"); 
-  var v = c.getElementsByTagName("verse")[verse-1]
+  var v = c.getElementsByTagName("verse")[verse-1];
   if (v==null)
 	throw "no verse";
   verseOutput += ":";
@@ -134,19 +134,27 @@ function getNodeString(node) {
 		   // use hasAttribute(attributename) to figure out the right attribute
        if(checkBox.checked == true){
         if (node.hasAttribute("hebrew")) {
-			 result += "<i><font size=1 color=blue><sub>";
-			 result += node.getAttribute("hebrew");
-			 result += "</sub></font></i> ";
+          lexID = node.getAttribute("hebrew");
+          var version = "hebrew";
+          result += "<a href='javascript:strongOutput("+lexID+",\""+version+"\")'>";
+          result += "<i><font size=1 color=green><sub>";
+          result += node.getAttribute("hebrew");
+          result += "</sub></font></i> ";
+          result +="</a>";
 		   }
 		   if (node.hasAttribute("greek")) {
-			 result += "<i><font size=1 color=green><sub>";
-			 result += node.getAttribute("greek");
-			 result += "</sub></font></i> ";
+          lexID = node.getAttribute("greek");
+          var version = "greek";
+          result += "<a href='javascript:strongOutput("+lexID+",\""+version+"\")'>";
+          result += "<i><font size=1 color=black><sub>";
+          result += node.getAttribute("greek");
+          result += "</sub></font></i> ";
+          result +="</a>";
 		   }
 		   if (node.hasAttribute("number")) {
-			 result += "<i><font size=1 color=teal><sub>";
-			 result += node.getAttribute("number");
-			 result += "</sub></font></i> ";
+          result += "<i><font size=1 color=teal><sub>";
+          result += node.getAttribute("number");
+          result += "</sub></font></i> ";
 		   }
        }
 		   
@@ -155,13 +163,44 @@ function getNodeString(node) {
 	}
 	return(result);
 } // end getNodeString
+
+function strongOutput(content, version){
+  //document.write("Content " + content);
+
+var number = parseInt(content) / 100;
+
+  if(version == "hebrew"){
+    XMLBook = biblePath + "heb_strongs/heb" + number + ".xml";
+  }
+  if(version == "greek"){
+   XMLBook = biblePath + "greek_strongs/grk" + number + ".xml";
+  }
+
+  xmlhttp.open("GET",XMLBook,false);
+  xmlhttp.send();
+  xmlDoc = xmlhttp.responseXML;
+ var outPut = "";
+ var itemNumber = parseInt(content)%100;
+ var item = xmlDoc.getElementsByTagName("item")[itemNumber-1];
+ outPut+=item.getElementsByTagName("strong_id").childNodes[0].nodeValue;
+ outPut += item.getElementsByTagName("title").childNodes[0].nodeValue;
+ outPut+= item.getElementsByTagName("transliteration").childNodes[0].nodeValue;
+
+//var itemValue = item.getAttribute("number");
+//var itemVerse = item.getElementById("lexicon")[content-1];
+
+  document.all.strongTextOutput.innerHTML +="<p>" +outPut+ "</p>";
+
+}
+
 </script>
 </head>
 
-<body onLoad="setup()">
+<body style="color: white;background-color:#403B3B;" onLoad="setup()">
 <form onsubmit="return false"> <!-- submit button defines handler below:
                                     onclick="javascript: getresponse()" -->
-<h1>Bible Search from XML files</h1>
+<h1 style="color: green;">Bible Search from XML files</h1>
+<h2 style="margin-left: 650px; margin-top: -2px;color: green;">LEXICON</h2>
 <table>
   <TR>
     <TD ALIGN=RIGHT VALIGN=TOP>Select bible version</TD>
@@ -191,8 +230,12 @@ function getNodeString(node) {
   <TR>
     <TD ALIGN=RIGHT VALIGN=TOP>Include strong's lexicon references</TD>
     <TD ALIGN=LEFT VALIGN=TOP><INPUT NAME="checkBox" TYPE="checkbox" MAXLENGTH=3 id=checkBox></TD>
-    </TR>
+   </TR>
+   
 </table>
+<div id= "strongTextOutput" style="overflow-y: scroll; height:200px;width: 600px; background-color:rgb(37, 37, 37);
+margin-left: 400px; margin-top: -170px;border: greenyellow;">
+</div>
 <p>
 <input type="submit" onclick="javascript: getresponse()" name="submit" value="Submit" />
 </p>
