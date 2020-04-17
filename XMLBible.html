@@ -48,13 +48,7 @@ function getresponse () {
   var bookInfo = "<h6>Book retrieved from file: " + XMLBook + "</h6>";
   document.all.headArea.innerHTML = "<h1><font color=green>XML Bible Demo Output</font></h1>"
 									+ bookInfo;
- // document.all.responseArea.innerHTML += "<b><i>im here </i></b>";
-   // document.write("Welcome to CodeTextPro");
- //  var nextBook = 0;
-  // var nextChap = 0;
-  // var nextVerse = 0;
-
-   //document.all.responseArea.innerHTML += "<b><i>im her " +verseNumber+ "</i></b>";
+ 
    var i;
    document.all.responseArea.innerHTML = " ";
    for(i = 0; i <verseNumber;i++){
@@ -127,6 +121,7 @@ function getNodeString(node) {
 		   result += "</span> ";
 		}
 		else if (node.nodeName=="strongs") {
+      var version;
 
         if (node.childNodes[0] != null) {
 			 result += " " + node.childNodes[0].nodeValue + " ";
@@ -135,8 +130,9 @@ function getNodeString(node) {
        if(checkBox.checked == true){
         if (node.hasAttribute("hebrew")) {
           lexID = node.getAttribute("hebrew");
-          var version = "hebrew";
-          result += "<a href='javascript:strongOutput("+lexID+",\""+version+"\")'>";
+          version = "hebrew";
+
+          result += "<a style='text-decoration:none;' href='javascript:strongOutput("+lexID+",\""+version+"\")'>";
           result += "<i><font size=1 color=green><sub>";
           result += node.getAttribute("hebrew");
           result += "</sub></font></i> ";
@@ -144,9 +140,9 @@ function getNodeString(node) {
 		   }
 		   if (node.hasAttribute("greek")) {
           lexID = node.getAttribute("greek");
-          var version = "greek";
-          result += "<a href='javascript:strongOutput("+lexID+",\""+version+"\")'>";
-          result += "<i><font size=1 color=black><sub>";
+          version = "greek";
+          result += "<a style='text-decoration:none;' href='javascript:strongOutput("+lexID+",\""+version+"\")'>";
+          result += "<i><font size=1 color=yellow><sub>";
           result += node.getAttribute("greek");
           result += "</sub></font></i> ";
           result +="</a>";
@@ -159,7 +155,27 @@ function getNodeString(node) {
        }
 		   
 		  
-	   }
+	   }else if(node.nodeName == "link"){
+       if(node.hasAttribute("target")){
+          var value = node.getAttribute("target");
+
+          var version2 = value.substr(0, 1);
+          if(version2 == "H"){
+            version2 = "hebrew";
+          }else{
+            version2 = "greek";
+          }
+
+          var lexID = value.substr(1);
+          result += "<a style='text-decoration:none;' href='javascript:strongOutput("+lexID+",\""+version2+"\")'>";
+          result += "<i><font size=1 color=green><sub>";
+          result += lexID;
+          result += "</sub></font></i> ";
+          result +="</a>";
+          
+       }
+
+     }
 	}
 	return(result);
 } // end getNodeString
@@ -167,7 +183,8 @@ function getNodeString(node) {
 function strongOutput(content, version){
   //document.write("Content " + content);
 
-var number = parseInt(content) / 100;
+var number = Math.floor(parseInt(content) / 100);
+ 
 
   if(version == "hebrew"){
     XMLBook = biblePath + "heb_strongs/heb" + number + ".xml";
@@ -179,17 +196,27 @@ var number = parseInt(content) / 100;
   xmlhttp.open("GET",XMLBook,false);
   xmlhttp.send();
   xmlDoc = xmlhttp.responseXML;
+
  var outPut = "";
  var itemNumber = parseInt(content)%100;
  var item = xmlDoc.getElementsByTagName("item")[itemNumber-1];
- outPut+=item.getElementsByTagName("strong_id").childNodes[0].nodeValue;
- outPut += item.getElementsByTagName("title").childNodes[0].nodeValue;
- outPut+= item.getElementsByTagName("transliteration").childNodes[0].nodeValue;
+//  outPut+=item.getElementsByTagName("strong_id").childNodes[0].nodeValue;
+ outPut+=item.getElementsByTagName("strong_id")[0].childNodes[0].nodeValue + " ";
+ outPut += item.getElementsByTagName("title")[0].childNodes[0].nodeValue + " ";
+ outPut+= item.getElementsByTagName("transliteration")[0].childNodes[0].nodeValue + " ";
+ //outPut+= item.getElementsByTagName("pronunciation")[0].childNodes[0].nodeValue + " ";
+ var item2 = item.getElementsByTagName("pronunciation")[0];
+ var item3 = item.getElementsByTagName("description")[0];
+ //outPut+= item.getElementsByTagName("description")[0].childNodes[0].nodeValue + " ";
+ for (j=0; j < item2.childNodes.length; j++) {
+  outPut += getNodeString(item2.childNodes[j]) + " ";
+ }
 
-//var itemValue = item.getAttribute("number");
-//var itemVerse = item.getElementById("lexicon")[content-1];
+ for (j=0; j < item3.childNodes.length; j++) {
+  outPut += getNodeString(item3.childNodes[j]) + " ";
+ } 
 
-  document.all.strongTextOutput.innerHTML +="<p>" +outPut+ "</p>";
+  document.all.strongTextOutput.innerHTML +="<p style='margin-left: 5px'>" +outPut+ "</p>";
 
 }
 
@@ -234,7 +261,7 @@ var number = parseInt(content) / 100;
    
 </table>
 <div id= "strongTextOutput" style="overflow-y: scroll; height:200px;width: 600px; background-color:rgb(37, 37, 37);
-margin-left: 400px; margin-top: -170px;border: greenyellow;">
+margin-left: 400px; margin-top: -170px;border: 2px solid greenyellow;">
 </div>
 <p>
 <input type="submit" onclick="javascript: getresponse()" name="submit" value="Submit" />
