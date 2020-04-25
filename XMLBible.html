@@ -30,11 +30,15 @@ function getresponse () {
   var c = document.getElementById('chapter').value;
   var v = parseInt(document.getElementById('verse').value);
   var verseNumber = parseInt(document.getElementById('verseNumber').value);
-  var bibleVersion = document.getElementById('bibleVersion').value;
+  bibleVersion = document.getElementById('bibleVersion').value;
+
+  if(isNaN(verseNumber)){
+    verseNumber = 1;
+  }
 
   // TODO: add code to select a version of the Bible based on user input
   // (only KJV and WEB versions are available with XML files)
-  var XMLBook;
+  var XMLBook ="";
   if(bibleVersion == "WEB"){
    XMLBook = biblePath + "web_by_book/" + b + ".xml";
   }else{
@@ -52,29 +56,29 @@ function getresponse () {
    var i;
    document.all.responseArea.innerHTML = " ";
    for(i = 0; i <verseNumber;i++){
-    try {
-        vtext = getVerse(b,c,v);
-      	document.all.responseArea.innerHTML += "<p>" +vtext+ "</p>";
-       v++;
+      try {
+          vtext = getVerse(b,c,v);
+          document.all.responseArea.innerHTML += "<p>" +vtext+ "</p>";
+        v++;
 
-  }
-  catch(error) {
-    if (error == "no chapter") {
-      document.all.responseArea.innerHTML += "<b><i>No such chapter " +c+ "</i></b>";
-      break;
-    }      
-    if (error == "no verse") {
-     if(i == 0){
-      document.all.responseArea.innerHTML += "<b><i>No such verse " +v+ "</i></b>";
-      break;
-     }else{
-      c++;
-      v = 1;
-      i--;
-     }
-        
     }
-  }
+    catch(error) {
+        if (error == "no chapter") {
+        document.all.responseArea.innerHTML += "<b><i>No such chapter " +c+ "</i></b>";
+        break;
+      }      
+      if (error == "no verse") {
+        if(i == 0){
+          document.all.responseArea.innerHTML += "<b><i>No such verse " +v+ "</i></b>";
+          break;
+      }else{
+          c++;
+          v = 1;
+          i--;
+      }
+           
+     }
+    }
   } 
 } // end getResponse
 
@@ -98,6 +102,7 @@ function getVerse(book,chapter,verse) {
   return(verseOutput);
 } // end getVerse
 
+var value;
 function getNodeString(node) {
   var checkBox = document.getElementById('checkBox');
 
@@ -157,8 +162,8 @@ function getNodeString(node) {
 		  
 	   }else if(node.nodeName == "link"){
        if(node.hasAttribute("target")){
-          var value = node.getAttribute("target");
-
+          value = node.getAttribute("target");
+          
           var version2 = value.substr(0, 1);
           if(version2 == "H"){
             version2 = "hebrew";
@@ -184,40 +189,144 @@ function strongOutput(content, version){
   //document.write("Content " + content);
 
 var number = Math.floor(parseInt(content) / 100);
+var itemNumber = parseInt(content)%100;
+
+if(itemNumber == 0){
+  number -= 1;
+  itemNumber = 99;
+}
  
+ var versionTag2;
 
   if(version == "hebrew"){
     XMLBook = biblePath + "heb_strongs/heb" + number + ".xml";
+    versionTag2 = "H";
   }
   if(version == "greek"){
    XMLBook = biblePath + "greek_strongs/grk" + number + ".xml";
+   versionTag2 = "G";
   }
+
+
 
   xmlhttp.open("GET",XMLBook,false);
   xmlhttp.send();
   xmlDoc = xmlhttp.responseXML;
 
  var outPut = "";
- var itemNumber = parseInt(content)%100;
  var item = xmlDoc.getElementsByTagName("item")[itemNumber-1];
-//  outPut+=item.getElementsByTagName("strong_id").childNodes[0].nodeValue;
  outPut+=item.getElementsByTagName("strong_id")[0].childNodes[0].nodeValue + " ";
  outPut += item.getElementsByTagName("title")[0].childNodes[0].nodeValue + " ";
  outPut+= item.getElementsByTagName("transliteration")[0].childNodes[0].nodeValue + " ";
- //outPut+= item.getElementsByTagName("pronunciation")[0].childNodes[0].nodeValue + " ";
  var item2 = item.getElementsByTagName("pronunciation")[0];
  var item3 = item.getElementsByTagName("description")[0];
- //outPut+= item.getElementsByTagName("description")[0].childNodes[0].nodeValue + " ";
- for (j=0; j < item2.childNodes.length; j++) {
+ for (var j=0; j < item2.childNodes.length; j++) {
   outPut += getNodeString(item2.childNodes[j]) + " ";
  }
 
- for (j=0; j < item3.childNodes.length; j++) {
+ for (var j=0; j < item3.childNodes.length; j++) {
   outPut += getNodeString(item3.childNodes[j]) + " ";
  } 
 
   document.all.strongTextOutput.innerHTML +="<p style='margin-left: 5px'>" +outPut+ "</p>";
+  document.all.responseArea.innerHTML +="<h2 style='text-align: center;color: green'>" + "References with "+ versionTag2 + content+ " verse output" + "</h2>";
+  refOutput(content, version);
+}
 
+
+function getBookNameOrNumber(value){
+    var newValue = value;
+
+    var bookName = [ "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges",
+
+  "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah",
+
+  "Esther","Job", "Psalms", "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations",
+
+  "Ezekiel", "Daniel", "Hosea","Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah",
+
+  "Haggai", "Zechariah", "Malachi", "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians",
+
+  "Galatians", "Ephesians", "Philippians", "Colossians", "1 Thessalonians", "2 thessalonians", "1 Timothy",
+
+  "2 Timothy", "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John", "2 John", "3 John", "Jude",
+
+  "Revelation"];
+
+  if(isNaN(newValue)){
+    return bookName.indexOf(value) + 1;
+  }else{
+    return bookName[newValue-1];
+  }
+
+}
+
+function refOutput(refId, version){
+
+   versionTag = "";
+   newRefId = refId;
+  if(version == "hebrew"){
+    XMLBook = biblePath + "bible_refs_of_strongs_numbers/bible_refs_by_strongs_num_ot.xml";
+    versionTag = "H";
+  }
+  if(version == "greek"){
+   XMLBook = biblePath + "bible_refs_of_strongs_numbers/bible_refs_by_strongs_num_nt.xml";
+   versionTag="G"
+  }
+  
+      xmlhttp.open("GET",XMLBook,false);
+      xmlhttp.send();
+      xmlDoc = xmlhttp.responseXML;
+
+
+    var links="";
+    var item = xmlDoc.getElementsByTagName("item")[refId-1];
+    var refs = item.getElementsByTagName("ref");
+    for (var j=0; j < refs.length; j++) {
+    var link="";
+    var result = "";
+    var ref = refs[j];
+
+    document.getElementById("refOutput").innerHTML = "";
+    document.getElementById("refId").innerHTML=(versionTag + refId);
+
+    result += getBookNameOrNumber(ref.getAttribute("b"));
+    result += ":" + ref.getAttribute("ch");
+    result +=":" + ref.getAttribute("v");
+    link += "<a style='text-decoration:none;' href='javascript:displayRef(\""+result+"\")'>";
+    link += "<i><font size=5 color=green><sub>"; 
+    link += result;
+    link += "</sub></font></i> ";
+    link +="</a>";
+    links += link + "<br>";
+ }
+    
+    document.all.refOutput.innerHTML += links;
+}
+
+function displayRef(ref){
+
+  var newRef = ref;
+  var refArray = newRef.split(":");
+  var b = refArray[0];
+  var ch = refArray[1];
+  var v = refArray[2];
+  var bookNum = getBookNameOrNumber(b);
+
+  var XMLBook ="";
+  if(bibleVersion == "WEB"){
+   XMLBook = biblePath + "web_by_book/" + bookNum + ".xml";
+  }else{
+   XMLBook = biblePath + "kjv_by_book/" + bookNum + ".xml";
+  }
+
+  xmlhttp.open("GET",XMLBook,false);
+  xmlhttp.send();
+  xmlDoc = xmlhttp.responseXML;
+
+  var verse = getVerse(bookNum,ch,v);
+
+  document.all.responseArea.innerHTML += "<p>" + verse + "</p>";
 }
 
 </script>
@@ -226,43 +335,63 @@ var number = Math.floor(parseInt(content) / 100);
 <body style="color: white;background-color:#403B3B;" onLoad="setup()">
 <form onsubmit="return false"> <!-- submit button defines handler below:
                                     onclick="javascript: getresponse()" -->
+                                                                   
 <h1 style="color: green;">Bible Search from XML files</h1>
-<h2 style="margin-left: 650px; margin-top: -2px;color: green;">LEXICON</h2>
+
 <table>
   <TR>
-    <TD ALIGN=RIGHT VALIGN=TOP>Select bible version</TD>
+    <TD ALIGN=RIGHT VALIGN=TOP>
+      <table>
+        <TR>
+          <TD ALIGN=RIGHT VALIGN=TOP>Select bible version</TD>
+          <TD ALIGN=LEFT VALIGN=TOP>
+            <select name="bibleVersion" id = "bibleVersion">
+              <option>WEB</option>
+              <option>KJV</option>
+            </select>
+          </TD>
+        </TR>
+      <TR>
+      <TD ALIGN=RIGHT VALIGN=TOP>Book Number</TD>
+      <TD ALIGN=LEFT VALIGN=TOP><INPUT NAME="book" TYPE="text" MAXLENGTH=2  id=book></TD>
+      </TR>
+      <TR>
+      <TD ALIGN=RIGHT VALIGN=TOP>Chapter</TD>
+      <TD ALIGN=LEFT VALIGN=TOP><INPUT NAME="chapter" TYPE="text" MAXLENGTH=3  id=chapter></TD>
+      </TR>
+      <TR>
+      <TD ALIGN=RIGHT VALIGN=TOP>Verse</TD>
+      <TD ALIGN=LEFT VALIGN=TOP><INPUT NAME="verse" TYPE="text" MAXLENGTH=3 id=verse></TD>
+      </TR>
+      <TR>
+        <TD ALIGN=RIGHT VALIGN=TOP>Number of verse</TD>
+        <TD ALIGN=LEFT VALIGN=TOP><INPUT NAME="verseNumer" TYPE="text" MAXLENGTH=3 id=verseNumber></TD>
+        </TR>
+        <TR>
+          <TD ALIGN=RIGHT VALIGN=TOP>Include strong's lexicon references</TD>
+          <TD ALIGN=LEFT VALIGN=TOP><INPUT NAME="checkBox" TYPE="checkbox" MAXLENGTH=3 id=checkBox></TD>
+         </TR>
+         
+      </table>
+    </TD>
+    <!--Display table-->
     <TD ALIGN=LEFT VALIGN=TOP>
-      <select name="bibleVersion" id = "bibleVersion">
-        <option>WEB</option>
-        <option>KJV</option>
-      </select>
+      <table>
+        <TR>
+          <TD ALIGN=RIGHT VALIGN=TOP>
+            <h2 style="text-align: center;color:green">Lexicon</h2>
+            <div id="strongTextOutput" style="overflow-y: scroll;height: 200px;width: 750px;background-color: rgb(37, 37, 37);border: 2px solid greenyellow;text-align: center;"></div>
+          </TD>
+          <TD ALIGN=LEFT VALIGN=TOP>
+            <h2 style="text-align: center;color: green;">References with <var id="refId">value</var></h2>
+            <div class="button" id="refOutput" style="overflow-y: scroll;height: 200px;width: 400px;background-color: rgb(37, 37, 37);border: 2px solid greenyellow;text-align: center;"></div>
+          </TD>
+        </TR>
+      </table>
     </TD>
   </TR>
-<TR>
-<TD ALIGN=RIGHT VALIGN=TOP>Book Number</TD>
-<TD ALIGN=LEFT VALIGN=TOP><INPUT NAME="book" TYPE="text" MAXLENGTH=2  id=book></TD>
-</TR>
-<TR>
-<TD ALIGN=RIGHT VALIGN=TOP>Chapter</TD>
-<TD ALIGN=LEFT VALIGN=TOP><INPUT NAME="chapter" TYPE="text" MAXLENGTH=3  id=chapter></TD>
-</TR>
-<TR>
-<TD ALIGN=RIGHT VALIGN=TOP>Verse</TD>
-<TD ALIGN=LEFT VALIGN=TOP><INPUT NAME="verse" TYPE="text" MAXLENGTH=3 id=verse></TD>
-</TR>
-<TR>
-  <TD ALIGN=RIGHT VALIGN=TOP>Number of verse</TD>
-  <TD ALIGN=LEFT VALIGN=TOP><INPUT NAME="verseNumer" TYPE="text" MAXLENGTH=3 id=verseNumber></TD>
-  </TR>
-  <TR>
-    <TD ALIGN=RIGHT VALIGN=TOP>Include strong's lexicon references</TD>
-    <TD ALIGN=LEFT VALIGN=TOP><INPUT NAME="checkBox" TYPE="checkbox" MAXLENGTH=3 id=checkBox></TD>
-   </TR>
-   
 </table>
-<div id= "strongTextOutput" style="overflow-y: scroll; height:200px;width: 600px; background-color:rgb(37, 37, 37);
-margin-left: 400px; margin-top: -170px;border: 2px solid greenyellow;">
-</div>
+
 <p>
 <input type="submit" onclick="javascript: getresponse()" name="submit" value="Submit" />
 </p>
